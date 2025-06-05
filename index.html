@@ -58,26 +58,26 @@
             display: inline-flex;
             align-items: center;
             margin-right: 20px; /* Increased spacing between different contact links */
-            color: #ffffff; /* Set text color to white */
+            color: #4a5568; /* Default text color for light mode (gray-700) */
             transition: color 0.2s ease-in-out;
             white-space: nowrap; /* Prevent text wrapping within a link */
         }
         .contact-info a:hover {
-            color: #d1d5db; /* Lighter white on hover */
+            color: #2b6cb0; /* Blue on hover */
         }
         .contact-info svg {
             margin-right: 12px; /* Increased space between icon and text */
             font-size: 1rem; /* Icon size */
-            color: #ffffff; /* Set icon color to white */
+            color: #4a5568; /* Default icon color for light mode (gray-700) */
         }
         .dark .contact-info a {
-            color: #ffffff; /* White text for dark mode */
+            color: #e2e8f0; /* Dark mode text color (gray-200) */
         }
         .dark .contact-info a:hover {
-            color: #d1d5db; /* Lighter white on hover for dark mode */
+            color: #63b3ed; /* Light blue on hover for dark mode */
         }
         .dark .contact-info svg {
-            color: #ffffff; /* White icon for dark mode */
+            color: #e2e8f0; /* Dark mode icon color (gray-200) */
         }
 
         /* Style for the marquee container for better control */
@@ -205,12 +205,11 @@
                     </button>
                 </div>
             </div>
-            <!-- Removed "By Arif Wibowo Blitar" from here as it's now in marquee -->
-            <div class="text-xl font-semibold text-gray-800 dark:text-gray-200 mt-1 mb-2 text-center sm:text-left w-full hidden"></div> <!-- This line is removed -->
-            <div class="marquee-container text-sm font-normal text-gray-700 w-full">
+            <!-- Text "By Arif Wibowo Blitar" is now part of the marquee below -->
+            <div class="marquee-container text-sm font-normal w-full">
                 <marquee behavior="scroll" direction="left" scrollamount="5">
                     <div class="contact-info inline-flex items-center">
-                        <span class="text-white">By Arif Wibowo Blitar &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        <span class="font-semibold text-base">By Arif Wibowo Blitar &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
                         <a href="https://instagram.com/arifwibowoblitar" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i> arifwibowoblitar</a>
                         <a href="https://wa.me/6285645839871" target="_blank" aria-label="Whatsapp"><i class="fab fa-whatsapp"></i> 085645839871</a>
                         <a href="https://facebook.com/arifwibowoblitar" target="_blank" aria-label="Facebook"><i class="fab fa-facebook"></i> arifwibowoblitar</a>
@@ -715,7 +714,7 @@
                     '': 'Pilih Gaya/Mood',
                     'cinematic': 'Sinematik',
                     'cheerful': 'Ceria',
-                    'dramatic': 'Dramatis',
+                    'dramatis': 'Dramatis',
                     'minimalist': 'Minimalis',
                     'realistic': 'Realistis',
                     'abstract': 'Abstrak',
@@ -744,7 +743,7 @@
                 id: {
                     '': 'Pilih Elemen Audio',
                     'cheerful_music': 'Musik Latar Ceria',
-                    'dramatic_music': 'Musik Latar Dramatis',
+                    'dramatis_music': 'Musik Latar Dramatis',
                     'mysterious_music': 'Musik Latar Misterius',
                     'explosion_sfx': 'Efek Suara Ledakan',
                     'nature_sfx': 'Efek Suara Alam',
@@ -829,7 +828,7 @@
                     'natural_day': 'Natural (Day)',
                     'natural_dusk': 'Natural (Dusk)',
                     'natural_night': 'Natural (Night)',
-                    'dramatic_shadows': 'Dramatic Shadows',
+                    'dramatis_shadows': 'Dramatic Shadows',
                     'silhouette': 'Silhouette',
                     'neon': 'Neon',
                     'soft_even': 'Soft and Even',
