@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Veo Prompt Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* bg-gray-100 */
+            transition: background-color 0.3s, color 0.3s;
+            /* body itself should not dictate overall flex layout for the main content page */
+        }
+        /* Dark mode styles for body */
+        body.dark {
+            background-color: #1a202c; /* bg-gray-900 */
+            color: #e2e8f0; /* text-gray-200 */
+        }
+
+        /* Specific styles for login page container */
+        #loginPage.is-active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Ensure it takes full viewport height for centering */
+            width: 100%; /* Ensure it takes full width */
+        }
+
+        /* Main app page should be standard block layout when active */
+        #mainAppPage.is-active {
+            display: block;
+        }
+
+        /* Dark mode styles for other elements */
+        .dark .bg-white { background-color: #2d3748; } /* bg-gray-800 */
+        .dark .text-gray-900 { color: #e2e8f0; }
+        .dark .text-gray-700 { color: #a0aec0; }
+        .dark .border-gray-300 { border-color: #4a5568; }
+        .dark input, .dark select, .dark textarea {
+            background-color: #4a5548;
+            color: #e2e8f0;
+            border-color: #616e7f;
+        }
+        .dark input::placeholder, .dark textarea::placeholder {
+            color: #a0aec0;
+        }
+        .dark .focus\:ring-blue-500:focus {
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+        }
+        .dark .saved-prompt-item {
+            background-color: #2d3748;
+            border-color: #4a5548;
+        }
+        .contact-info a {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 20px; /* Increased spacing between different contact links */
+            color: #ffffff; /* Set text color to white */
+            transition: color 0.2s ease-in-out;
+            white-space: nowrap; /* Prevent text wrapping within a link */
+        }
+        .contact-info a:hover {
+            color: #d1d5db; /* Lighter white on hover */
+        }
+        .contact-info svg {
+            margin-right: 12px; /* Increased space between icon and text */
+            font-size: 1rem; /* Icon size */
+            color: #ffffff; /* Set icon color to white */
+        }
+        .dark .contact-info a {
+            color: #ffffff; /* White text for dark mode */
+        }
+        .dark .contact-info a:hover {
+            color: #d1d5db; /* Lighter white on hover for dark mode */
+        }
+        .dark .contact-info svg {
+            color: #ffffff; /* White icon for dark mode */
+        }
+
+        /* Style for the marquee container for better control */
+        .marquee-container {
+            width: 100%; /* Ensure it takes full width */
+            overflow: hidden; /* Hide overflow */
+            margin-top: 8px; /* Space from main title */
+            padding: 4px 0;
+            background-color: #e5e7eb; /* Light grey background for contrast */
+            border-radius: 4px;
+            box-sizing: border-box; /* Include padding in width */
+        }
+        .dark .marquee-container {
+            background-color: #4a5568; /* Darker background for dark mode */
+        }
+        marquee {
+            white-space: nowrap; /* Ensure text stays on one line */
+            display: inline-block; /* Ensure marquee works as expected */
+            width: 100%; /* Important for smooth scrolling */
+        }
+
+        /* Modal specific styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .dark .modal-content {
+            background-color: #2d3748;
+            color: #e2e8f0;
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .dark .close-button {
+            color: #ccc;
+        }
+        .dark .close-button:hover,
+        .dark .close-button:focus {
+            color: white;
+        }
+    </style>
+</head>
+<body class="transition-colors duration-300">
+
+    <!-- Login Page Section -->
+    <div id="loginPage" class="w-full">
+        <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-sm dark:bg-gray-800">
+            <h2 class="text-2xl font-bold text-center mb-6 text-gray-900 dark:text-gray-100">Login Aplikasi Veo Prompt</h2>
+            <form id="loginForm">
+                <div class="mb-4">
+                    <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username:</label>
+                    <input type="text" id="username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300" required>
+                </div>
+                <div class="mb-6">
+                    <label for="password" class="block text-sm font-font-medium text-gray-700 dark:text-gray-300 mb-1">Password:</label>
+                    <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300" required>
+                </div>
+                <div id="errorMessage" class="text-red-500 text-sm text-center mb-4 hidden"></div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50 transition duration-300">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Application Page Section -->
+    <div id="mainAppPage" class="container mx-auto p-4 md:p-8 max-w-4xl hidden">
+        <header class="flex flex-col mb-6">
+            <div class="flex items-start md:items-center justify-between w-full">
+                <h1 class="text-3xl font-bold text-center md:text-left">
+                    Google Veo Prompt Generator
+                </h1>
+                <div class="flex items-center space-x-4 mt-4 md:mt-0 md:ml-auto">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="darkModeToggle" class="hidden">
+                        <label for="darkModeToggle" class="flex items-center cursor-pointer">
+                            <div class="relative">
+                                <div class="w-10 h-5 bg-gray-300 rounded-full shadow-inner dark:bg-gray-700"></div>
+                                <div class="dot absolute w-3 h-3 bg-white rounded-full shadow -left-1 top-1 transition-transform dark:translate-x-full dark:bg-blue-500"></div>
+                            </div>
+                            <!-- Removed text "Mode Gelap" -->
+                        </label>
+                    </div>
+                    <div class="relative">
+                        <select id="uiLanguageSelect" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">
+                            <option value="id">Bahasa Indonesia</option>
+                            <option value="en">English</option>
+                        </select>
+                    </div>
+                    <button id="helpButton" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold p-2 rounded-lg focus:outline-none focus:ring-4 focus:ring-gray-500 focus:ring-opacity-50 transition duration-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
+                        <i class="fas fa-question-circle text-lg"></i>
+                    </button>
+                    <button id="logoutButton" class="bg-red-600 hover:bg-red-700 text-white font-bold p-2 rounded-full w-8 h-8 flex items-center justify-center focus:outline-none focus:ring-4 focus:ring-red-500 focus:ring-opacity-50 transition duration-300">
+                        <i class="fas fa-xmark text-lg"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="text-xl font-semibold text-gray-800 dark:text-gray-200 mt-1 mb-2 text-center md:text-left">By Arif Wibowo Blitar</div>
+            <div class="marquee-container text-sm font-normal text-gray-700">
+                <marquee behavior="scroll" direction="left" scrollamount="5">
+                    <div class="contact-info inline-flex items-center">
+                        <a href="https://instagram.com/arifwibowoblitar" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i> arifwibowoblitar</a>
+                        <a href="https://wa.me/6285645839871" target="_blank" aria-label="Whatsapp"><i class="fab fa-whatsapp"></i> 085645839871</a>
+                        <a href="https://facebook.com/arifwibowoblitar" target="_blank" aria-label="Facebook"><i class="fab fa-facebook"></i> arifwibowoblitar</a>
+                    </div>
+                </marquee>
+            </div>
+        </header>
+
+        <section class="bg-white p-6 rounded-lg shadow-md mb-6 dark:bg-gray-800">
+            <h2 class="text-2xl font-semibold mb-4" id="instructionsTitle">Petunjuk Penggunaan</h2>
+            <div id="instructionsContent" class="text-gray-700 dark:text-gray-300">
+                <p class="mb-2" id="instructionsPara1"></p>
+                <ol class="list-decimal list-inside space-y-1">
+                    <li id="instructionsStep1"><strong>Pilih Persona:</strong> Tentukan peran atau gaya AI yang Anda inginkan.</li>
+                    <li id="instructionsStep2"><strong>Tentukan Tugas:</strong> Jelaskan secara spesifik apa yang Anda ingin AI lakukan.</li>
+                    <li id="instructionsStep3"><strong>Berikan Konteks:</strong> Isi setiap bidang untuk menggambarkan adegan video Anda secara detail:
+                        <ul class="list-disc list-inside ml-4 mt-1">
+                            <li id="instructionsStep3_1"><strong>Subjek Utama:</strong> Fokus utama atau karakter.</li>
+                            <li id="instructionsStep3_2"><strong>Lokasi:</strong> Tempat kejadian.</li>
+                            <li id="instructionsStep3_3"><strong>Waktu/Periode:</strong> Kapan adegan berlangsung.</li>
+                            <li id="instructionsStep3_4"><strong>Suasana/Mood:</strong> Nuansa emosional adegan.</li>
+                            <li id="instructionsStep3_5"><strong>Elemen Kunci/Objek:</strong> Objek atau detail penting lainnya.</li>
+                        </ul>
+                    </li>
+                    <li id="instructionsStep4"><strong>Pilih Genre Video:</strong> Pilih genre yang sesuai. Ini akan membuka opsi spesifik.</li>
+                    <li id="instructionsStep5"><strong>Tambahkan Detail Visual & Audio (Opsional):</strong> Sesuaikan gaya visual, pencahayaan, gerakan kamera, teknik pengambilan video, dan elemen audio.</li>
+                    <li id="instructionsStep6"><strong>Pilih Bahasa Prompt Hasil:</strong> Tentukan bahasa untuk prompt video yang akan dihasilkan.</li>
+                    <li id="instructionsStep7"><strong>Hasilkan Prompt:</strong> Klik tombol "Hasilkan Prompt" untuk melihat prompt yang sudah jadi.</li>
+                    <li id="instructionsStep8"><strong>Simpan Prompt:</strong> Anda dapat menyimpan prompt yang dihasilkan untuk penggunaan di masa mendatang.</li>
+                </ol>
+            </div>
+        </section>
+
+        <section class="bg-white p-6 rounded-lg shadow-md mb-6 dark:bg-gray-800">
+            <h2 class="text-2xl font-semibold mb-4" id="promptBuilderTitle">Bangun Prompt Anda</h2>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Persona -->
+                <div>
+                    <label for="persona" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" id="personaLabel">Persona (Contoh: Sutradara film):</label>
+                    <input type="text" id="persona" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300" placeholder="Saya adalah seorang jurnalis investigatif...">
+                </div>
+
+                <!-- Task -->
+                <div>
+                    <label for="task" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" id="taskLabel">Tugas (Contoh: Buat adegan film):</label>
+                    <input type="text" id="task" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300" placeholder="Hasilkan cuplikan video... (gunakan kata kerja)">
+                </div>
+
+                <!-- Context - New Separate Fields -->
+                <div class="md:col-span-2 grid md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="contextSubject" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" id="contextSubjectLabel">Subjek Utama (Contoh: Pahlawan, Kucing bermain):</label>
+                        <input type="text" id="contextSubject" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300" placeholder="Sebuah robot kuno...">
+                    </div>
+                    <div>
+                        <label for="contextLocation" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" id="contextLocationLabel">Lokasi (Contoh: Hutan Amazon, Stasiun luar angkasa):</label>
+                        <input type="text" id="contextLocation" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300" placeholder="Di dalam gua kristal...">
+                    </div>
+                    <div>
+                        <label for="contextTime" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" id="contextTimeLabel">Waktu/Periode (Contoh: Malam hari, Tahun 2077):</label>
+                        <input type="text" id="contextTime" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300" placeholder="Saat fajar menyingsing...">
+                    </div>
+                    <div>
+                        <label for="contextMood" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" id="contextMoodLabel">Suasana/Mood (Contoh: Misterius, Mengharukan):</label>
+                        <input type="text" id="contextMood" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300" placeholder="Menegangkan dan cepat...">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="contextKeyElements" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" id="contextKeyElementsLabel">Elemen Kunci/Objek (Contoh: mobil terbang, pohon):</label>
+                        <textarea id="contextKeyElements" rows="2" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300" placeholder="Air terjun bercahaya, patung naga, kristal yang berdenyut."></textarea>
+                    </div>
+                </div>
+
+                <!-- Video Genre -->
+                <div>
+                    <label for="videoGenre" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" id="genreLabel">Genre Video:</label>
+                    <select id="videoGenre" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">
+                        <option value="">Pilih Genre</option>
+                        <option value="action">Aksi</option>
+                        <option value="documentary">Dokumenter</option>
+                        <option value="comedy">Komedi</option>
+                        <option value="tutorial">Tutorial</option>
+                        <option value="sci-fi">Fiksi Ilmiah</option>
+                        <option value="fantasy">Fantasi</option>
+                        <option value="horror">Horor</option>
+                        <option value="animation">Animasi</option>
+                        <option value="music-video">Video Musik</option>
+                        <option value="commercial">Iklan</option>
+                        <option value="vlog">Vlog</option>
+                        <option value="explainer">Video Penjelasan</option>
+                        <option value="news">Berita</option>
+                        <option value="podcast">Podcast</option>
+                    </select>
+                </div>
+
+                <!-- Detail Visual & Audio Fields (NOW ALWAYS VISIBLE and Dropdowns) -->
+                <div id="genreSpecificFields" class="md:col-span-2 grid md:grid-cols-2 gap-6">
+                    <!-- Style/Mood Dropdown -->
+                    <div>
+                        <label for="videoStyle" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" id="styleLabel">Gaya Visual/Mood:</label>
+                        <select id="videoStyle" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">
+                            <!-- Options will be populated by JS -->
+                        </select>
+                    </div>
+                    <!-- Key Visual Elements (remains text input as it's too varied for dropdown) -->
+                    <div>
+                        <label for="visualElements" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" id="visualElementsLabel">Elemen Visual Kunci (Contoh: mobil terbang, pohon):</label>
+                        <input type="text" id="visualElements" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300" placeholder="Robot, naga, gunung salju...">
+                    </div>
+                    <!-- Audio Elements Dropdown -->
+                    <div>
+                        <label for="audioElements" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" id="audioElementsLabel">Elemen Audio:</label>
+                        <select id="audioElements" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">
+                            <!-- Options will be populated by JS -->
+                        </select>
+                    </div>
+                    <!-- Camera Movements Dropdown -->
+                    <div>
+                        <label for="cameraMovements" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" id="cameraMovementsLabel">Gerakan Kamera:</label>
+                        <select id="cameraMovements" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">
+                            <!-- Options will be populated by JS -->
+                        </select>
+                    </div>
+                    <!-- Lighting Dropdown -->
+                    <div>
+                        <label for="lighting" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" id="lightingLabel">Pencahayaan:</label>
+                        <select id="lighting" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">
+                            <!-- Options will be populated by JS -->
+                        </select>
+                    </div>
+                    <!-- Video Shooting Techniques Dropdown -->
+                    <div>
+                        <label for="shootingTechniques" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" id="shootingTechniquesLabel">Teknik Pengambilan Video:</label>
+                        <select id="shootingTechniques" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">
+                            <!-- Options will be populated by JS -->
+                        </select>
+                    </div>
+                    <!-- New Dialog Textarea -->
+                    <div class="md:col-span-2">
+                        <label for="dialogContent" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" id="dialogContentLabel">Dialog (Opsional):</label>
+                        <textarea id="dialogContent" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300" placeholder="Aktor 1: 'Halo, apa kabar?' Aktor 2: 'Baik, terima kasih!'"></textarea>
+                    </div>
+                </div>
+
+                <!-- Output Prompt Language -->
+                <div>
+                    <label for="outputPromptLanguage" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" id="outputLangLabel">Bahasa Prompt Hasil:</label>
+                    <select id="outputPromptLanguage" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">
+                        <option value="id">Bahasa Indonesia</option>
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                        <option value="fr">Français</option>
+                        <option value="de">Deutsch</option>
+                        <option value="ja">日本語</option>
+                        <option value="ko">한국어</option>
+                        <option value="zh">中文</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mt-6">
+                <button id="generatePromptBtn" class="w-full sm:w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50 transition duration-300 transform hover:scale-105" id="generateBtnText">Hasilkan Prompt</button>
+                <button id="resetFormBtn" class="w-full sm:w-1/2 bg-gray-400 hover:bg-gray-500 text-gray-800 font-bold py-3 px-4 rounded-lg focus:outline-none focus:ring-4 focus:ring-gray-500 focus:ring-opacity-50 transition duration-300 transform hover:scale-105 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">Reset Form</button>
+            </div>
+        </section>
+
+        <section class="bg-white p-6 rounded-lg shadow-md mb-6 dark:bg-gray-800">
+            <h2 class="text-2xl font-semibold mb-4" id="generatedPromptTitle">Prompt yang Dihasilkan</h2>
+            <div id="loadingIndicator" class="text-center py-4 text-gray-500 dark:text-gray-400 hidden">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                <span id="loadingText">Menghasilkan prompt...</span>
+            </div>
+            <textarea id="generatedPromptOutput" rows="8" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300" readonly placeholder="Prompt Anda akan muncul di sini."></textarea>
+            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mt-4">
+                <button id="copyPromptBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-4 focus:ring-green-500 focus:ring-opacity-50 transition duration-300 flex-1" id="copyBtnText">Salin Prompt</button>
+                <button id="savePromptBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-500 focus:ring-opacity-50 transition duration-300 flex-1" id="saveBtnText">Simpan Prompt</button>
+            </div>
+            <div id="messageBox" class="mt-4 p-3 rounded-md text-sm hidden" role="alert"></div>
+        </section>
+
+        <section class="bg-white p-6 rounded-lg shadow-md dark:bg-gray-800">
+            <h2 class="text-2xl font-semibold mb-4" id="savedPromptsTitle">Prompt yang Tersimpan</h2>
+            <div id="savedPromptsList" class="space-y-4">
+                <p class="text-gray-500 dark:text-gray-400" id="noSavedPromptsText">Belum ada prompt yang tersimpan.</p>
+            </div>
+        </section>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 class="text-2xl font-semibold mb-4" id="helpModalTitle">Bantuan Aplikasi Google Veo Prompt Generator</h2>
+            <div class="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
+                <h3>Bab 1: Pengantar Aplikasi</h3>
+                <p>Aplikasi <strong>Google Veo Prompt Generator</strong> dirancang untuk membantu Anda membuat prompt (perintah) yang detail dan efektif untuk menghasilkan video menggunakan AI Google Veo. Dengan antarmuka yang terstruktur, Anda dapat dengan mudah menentukan aspek-aspek kunci video Anda, mulai dari subjek hingga gaya visual dan audio, untuk mendapatkan hasil yang paling sesuai dengan keinginan Anda.</p>
+                <p>Tujuan utama aplikasi ini adalah menyederhanakan proses pembuatan prompt yang kompleks, memastikan prompt yang dihasilkan sangat efektif dan efisien dalam memandu AI Veo.</p>
+
+                <h3>Bab 2: Membangun Prompt Anda</h3>
+                <p>Bagian ini adalah inti dari aplikasi, tempat Anda menentukan semua detail video yang ingin Anda buat.</p>
+
+                <h4>2.1 Persona</h4>
+                <p>Tentukan peran atau gaya yang ingin Anda ambil saat memberikan perintah kepada AI. Ini membantu AI memahami sudut pandang dan nada yang diharapkan.</p>
+                <ul>
+                    <li><strong>Fungsi:</strong> Mendefinisikan karakter atau sudut pandang AI untuk memengaruhi gaya dan tone output.</li>
+                    <li><strong>Contoh:</strong> 'Sebagai sutradara film independen', 'Saya adalah seorang jurnalis investigatif', 'Sebagai seorang desainer grafis profesional'.</li>
+                </ul>
+
+                <h4>2.2 Tugas</h4>
+                <p>Jelaskan secara spesifik apa yang Anda ingin AI lakukan. Pastikan untuk menggunakan kata kerja yang jelas dan perintah yang langsung.</p>
+                <ul>
+                    <li><strong>Fungsi:</strong> Memberikan instruksi utama atau tujuan pembuatan video kepada AI.</li>
+                    <li><strong>Contoh:</strong> 'Buat adegan film pendek', 'Hasilkan cuplikan video promosi produk baru', 'Visualisasikan konsep desain arsitektur'.</li>
+                </ul>
+
+                <h4>2.3 Konteks</h4>
+                <p>Detail konteks memberikan informasi latar belakang dan elemen spesifik yang harus ada di dalam adegan video Anda. Semakin detail, semakin akurat dan sesuai hasil video.</p>
+                <ul>
+                    <li><strong>2.3.1 Subjek Utama:</strong> Fokus utama video Anda, bisa berupa karakter, objek, atau tema sentral.
+                        <ul>
+                            <li><strong>Fungsi:</strong> Menentukan inti dari adegan yang akan dibuat.</li>
+                            <li><strong>Contoh:</strong> 'Pahlawan super menyelamatkan kota', 'Kucing bermain di taman bunga', 'Robot kuno yang menjelajahi reruntuhan peradaban'.</li>
+                        </ul>
+                    </li>
+                    <li><strong>2.3.2 Lokasi:</strong> Tempat di mana adegan video berlangsung.
+                        <ul>
+                            <li><strong>Fungsi:</strong> Memberikan latar belakang fisik adegan.</li>
+                            <li><strong>Contoh:</strong> 'Hutan Amazon yang lebat dan berkabut', 'Stasiun luar angkasa yang sunyi mengorbit planet asing', 'Di dalam gua kristal yang bercahaya kebiruan'.</li>
+                        </ul>
+                    </li>
+                    <li><strong>2.3.3 Waktu/Periode:</strong> Kapan adegan berlangsung. Ini bisa berupa waktu dalam sehari, musim, atau era tertentu.
+                        <ul>
+                            <li><strong>Fungsi:</strong> Menetapkan kerangka waktu adegan.</li>
+                            <li><strong>Contoh:</strong> 'Malam hari dengan bulan purnama di atas pegunungan salju', 'Tahun 2077 di kota futuristik yang ramai', 'Saat fajar menyingsing di padang rumput yang luas'.</li>
+                        </ul>
+                    </li>
+                    <li><strong>2.3.4 Suasana/Mood:</strong> Nuansa emosional atau atmosfer yang ingin Anda sampaikan dalam video.
+                        <ul>
+                            <li><strong>Fungsi:</strong> Mengarahkan tone dan perasaan keseluruhan video.</li>
+                            <li><strong>Contoh:</strong> 'Misterius dan tegang', 'Mengharukan dan penuh harapan', 'Cepat dan penuh aksi'.</li>
+                        </ul>
+                    </li>
+                    <li><strong>2.3.5 Elemen Kunci/Objek:</strong> Objek atau detail penting lainnya yang harus muncul dalam adegan. Ini adalah entitas spesifik yang menjadi bagian dari adegan.
+                        <ul>
+                            <li><strong>Fungsi:</strong> Memastikan keberadaan objek-objek penting dalam adegan.</li>
+                            <li><strong>Contoh:</strong> 'Mobil terbang klasik melintas di langit', 'Pohon tua raksasa dengan akar bercahaya hijau', 'Air terjun bercahaya dan patung naga kuno yang agung'.</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <h4>2.4 Genre Video</h4>
+                <p>Pilih genre yang paling sesuai dengan jenis video yang ingin Anda buat. Pilihan genre akan membantu AI memahami konvensi, gaya, dan elemen khas yang terkait.</p>
+                <ul>
+                    <li><strong>Fungsi:</strong> Mengarahkan AI pada gaya naratif dan visual yang sesuai dengan genre.</li>
+                    <li><strong>Contoh:</strong> 'Aksi', 'Dokumenter', 'Komedi', 'Podcast', dll.</li>
+                </ul>
+
+                <h4>2.5 Detail Visual & Audio (Opsional)</h4>
+                <p>Bagian ini memungkinkan Anda menyempurnakan aspek teknis dan artistik video Anda secara lebih spesifik.</p>
+                <ul>
+                    <li><strong>2.5.1 Gaya Visual/Mood:</strong> Deskripsi tentang estetika visual secara keseluruhan.
+                        <ul>
+                            <li><strong>Fungsi:</strong> Menentukan look and feel visual yang dominan.</li>
+                            <li><strong>Contoh:</strong> (Pilihan Dropdown) 'Sinematik', 'Ceria', 'Dramatis', 'Minimalis', 'Realistis', 'Abstrak', 'Vintaj/Retro', 'Futuristik', 'Dokumenter', 'Fantasi', 'Horor'.</li>
+                        </ul>
+                    </li>
+                    <li><strong>2.5.2 Elemen Visual Kunci:</strong> Detail spesifik tentang bagaimana elemen-elemen visual terlihat atau ditampilkan. Ini adalah bagaimana entitas visual dimodifikasi atau memiliki ciri khas. Ini juga tempat Anda bisa mendeskripsikan pakaian, gaya rambut, bentuk tubuh, warna kulit, ekspresi wajah, atau ciri fisik spesifik lainnya dari karakter atau subjek Anda.
+                        <ul>
+                            <li><strong>Fungsi:</strong> Memberikan detail tambahan pada visual untuk memperkaya adegan.</li>
+                            <li><strong>Contoh:</strong> 'Robot dengan lapisan krom mengkilap', 'Naga bersisik emas yang memancarkan cahaya', 'Gunung salju tertutup kabut tebal'. Untuk karakter: 'Pria berjas hitam, rambut disisir rapi ke belakang, wajah tegas', 'Wanita bergaun sutra biru, rambut panjang terurai, senyum lembut', 'Anak kecil dengan rambut pirang ikal dan mata biru besar'.</li>
+                        </ul>
+                    </li>
+                    <li><strong>2.5.3 Elemen Audio:</strong> Suara atau musik yang harus ada dalam video. Untuk genre podcast atau dialog, ini sangat penting untuk menjelaskan alur percakapan.
+                        <ul>
+                            <li><strong>Fungsi:</strong> Mengontrol aspek suara dan musik video.</li>
+                            <li><strong>Contoh:</strong> (Pilihan Dropdown) 'Musik Latar Ceria', 'Efek Suara Ledakan', 'Narasi Pria'. Untuk dialog bergantian: 'Dialog jernih antara dua pembicara, dengan jeda alami antar giliran bicara dan volume suara yang konsisten'.</li>
+                        </ul>
+                    </li>
+                    <li><strong>2.5.4 Gerakan Kamera:</strong> Cara kamera bergerak di dalam adegan, memengaruhi perspektif penonton.
+                        <ul>
+                            <li><strong>Fungsi:</strong> Mengarahkan dinamika dan sudut pandang visual.</li>
+                            <li><strong>Contoh:</strong> (Pilihan Dropdown) 'Panoramik Kiri', 'Zoom In', 'Drone Shot', 'Handheld'.</li>
+                        </ul>
+                    </li>
+                    <li><strong>2.5.5 Pencahayaan:</strong> Deskripsi tentang kondisi cahaya dalam adegan.
+                        <ul>
+                            <li><strong>Fungsi:</strong> Menentukan atmosfer pencahayaan visual.</li>
+                            <li><strong>Contoh:</strong> (Pilihan Dropdown) 'Alami (Siang)', 'Dramatis (Bayangan Kuat)', 'Neon', 'Remang-remang'.</li>
+                        </ul>
+                    </li>
+                    <li><strong>2.5.6 Teknik Pengambilan Video:</strong> Metode atau gaya spesifik dalam merekam adegan. Ini bisa termasuk jenis shot, gerakan kamera spesifik, atau gaya visual unik.
+                        <ul>
+                            <li><strong>Fungsi:</strong> Memberikan detail gaya teknis pengambilan gambar.</li>
+                            <li><strong>Contoh:</strong> (Pilihan Dropdown) 'Wide Shot', 'Slow Motion', 'Point of View (POV)', 'Time-lapse'.</li>
+                        </ul>
+                    </li>
+                    <li><strong>2.5.7 Dialog (Opsional):</strong> Masukkan dialog yang ingin Anda sertakan dalam video. Untuk beberapa aktor, formatlah dengan jelas.
+                        <ul>
+                            <li><strong>Fungsi:</strong> Menyediakan transkrip atau narasi lisan untuk AI.</li>
+                            <li><strong>Contoh:</strong> 'Aktor 1: "Selamat pagi!" Aktor 2: "Pagi juga, bagaimana kabarmu?"'</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <h4>2.6 Bahasa Prompt Hasil</h4>
+                <p>Pilih bahasa yang Anda inginkan untuk prompt akhir yang akan dihasilkan oleh aplikasi. Ini adalah bahasa yang akan Anda masukkan ke Google Veo.</p>
+                <ul>
+                    <li><strong>Fungsi:</strong> Mengatur bahasa output prompt agar sesuai dengan kebutuhan pengguna.</li>
+                    <li><strong>Contoh:</strong> 'Bahasa Indonesia', 'English', 'Español', dll.</li>
+                </ul>
+
+                <h3>Bab 3: Menggunakan Hasil Prompt</h3>
+                <ul>
+                    <li><strong>Menghasilkan Prompt:</strong> Setelah mengisi semua bidang yang diperlukan, klik tombol "Hasilkan Prompt" untuk melihat teks prompt yang disarankan.</li>
+                    <li><strong>Menyalin Prompt:</strong> Gunakan tombol "Salin Prompt" untuk menyalin teks yang dihasilkan ke clipboard Anda, siap untuk ditempelkan ke Google Veo.</li>
+                    <li><strong>Menyimpan Prompt:</strong> Klik "Simpan Prompt" untuk menyimpan prompt yang dihasilkan di browser lokal Anda. Prompt yang disimpan akan muncul di bagian "Prompt yang Tersimpan".</li>
+                    <li><strong>Melihat Prompt Tersimpan:</strong> Semua prompt yang Anda simpan akan ditampilkan di bagian bawah aplikasi, memudahkan Anda untuk mengaksesnya kembali.</li>
+                    <li><strong>Menghapus Prompt Tersimpan:</strong> Untuk menghapus prompt yang tidak lagi Anda butuhkan, klik ikon tong sampah di samping prompt yang tersimpan.</li>
+                    <li><strong>Reset Form:</strong> Klik tombol "Reset Form" untuk membersihkan semua input form dan mengembalikan dropdown ke nilai default.</li>
+                </ul>
+
+                <h3>Bab 4: Fitur Aplikasi Lainnya</h3>
+                <ul>
+                    <li><strong>Mode Gelap:</strong> Gunakan toggle di bagian header untuk mengaktifkan atau menonaktifkan mode gelap, sesuai preferensi visual Anda.</li>
+                    <li><strong>Pilihan Bahasa UI:</strong> Anda dapat mengubah bahasa antarmuka pengguna aplikasi (saat ini Bahasa Indonesia atau Inggris) melalui dropdown di header.</li>
+                    <li><strong>Info Kontak Pengembang:</strong> Di bawah judul aplikasi, Anda akan menemukan informasi kontak pengembang untuk pertanyaan atau umpan balik, ditampilkan dalam teks berjalan.</li>
+                </ul>
+
+                <h3>Bab 5: Tips untuk Prompt Efektif</h3>
+                <p>Berdasarkan panduan penulisan prompt, berikut adalah tips tambahan untuk memaksimalkan hasil Anda:</p>
+                <ul>
+                    <li><strong>Spesifik dan Iteratif:</strong> Jangan takut untuk bereksperimen. Jika hasil pertama tidak sesuai, sesuaikan prompt Anda dengan detail yang lebih spesifik dan coba lagi. Ini adalah proses iteratif.</li>
+                    <li><strong>Ringkas dan Jelas:</strong> Hindari jargon atau kalimat yang bertele-tele. Sampaikan maksud Anda dengan bahasa yang sederhana namun informatif.</li>
+                    <li><strong>Jaga Alur Percakapan:</strong> Anggap prompt Anda sebagai percakapan dengan AI. Jaga alur dan berikan informasi seolah Anda sedang menjelaskan kepada seseorang.</li>
+                    <li><strong>Fokus pada Aksi:</strong> Selalu sertakan kata kerja atau perintah yang jelas (misalnya, "Hasilkan", "Buat", "Visualisasikan").</li>
+                    <li><strong>Gunakan Persona dengan Bijak:</strong> Persona dapat sangat memengaruhi gaya dan tone output. Pilih persona yang paling sesuai dengan visi Anda.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Global variables for Firebase config and app ID (not used in this client-side example)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null; 
+
+        // UI Language translations
+        const translations = {
+            'id': {
+                darkModeLabel: 'Mode Gelap',
+                instructionsTitle: 'Petunjuk Penggunaan',
+                instructionsPara1: 'Panduan ini membantu Anda membuat prompt video Google Veo yang detail dan efektif. Ikuti langkah-langkah:', // Shortened
+                instructionsStep1: '<strong>Pilih Persona:</strong> Tentukan peran atau gaya AI yang Anda inginkan.', // Shortened
+                instructionsStep2: '<strong>Tentukan Tugas:</strong> Jelaskan secara spesifik apa yang Anda ingin AI lakukan.', // Shortened
+                instructionsStep3: '<strong>Berikan Konteks:</strong> Isi setiap bidang untuk menggambarkan adegan video Anda secara detail:',
+                instructionsStep3_1: '<strong>Subjek Utama:</strong> Fokus utama atau karakter.',
+                instructionsStep3_2: '<strong>Lokasi:</strong> Tempat kejadian.',
+                instructionsStep3_3: '<strong>Waktu/Periode:</strong> Kapan adegan berlangsung.',
+                instructionsStep3_4: '<strong>Suasana/Mood:</strong> Nuansa emosional adegan.',
+                instructionsStep3_5: '<strong>Elemen Kunci/Objek:</strong> Objek atau detail penting lainnya.',
+                instructionsStep4: '<strong>Pilih Genre Video:</strong> Pilih genre yang sesuai. Ini akan membuka opsi spesifik.', // Shortened
+                instructionsStep5: '<strong>Tambahkan Detail Visual & Audio (Opsional):</strong> Sesuaikan gaya visual, pencahayaan, gerakan kamera, teknik pengambilan video, dan elemen audio.', // Shortened
+                instructionsStep6: '<strong>Pilih Bahasa Prompt Hasil:</strong> Tentukan bahasa untuk prompt video yang akan dihasilkan.',
+                instructionsStep7: '<strong>Hasilkan Prompt:</strong> Klik tombol "Hasilkan Prompt" untuk melihat prompt yang sudah jadi.',
+                instructionsStep8: '<strong>Simpan Prompt:</strong> Anda dapat menyimpan prompt yang dihasilkan untuk penggunaan di masa mendatang.',
+                promptBuilderTitle: 'Bangun Prompt Anda',
+                personaLabel: 'Persona (Contoh: Sutradara film):', // Shortened example
+                taskLabel: 'Tugas (Contoh: Buat adegan film):', // Shortened example
+                contextSubjectLabel: 'Subjek Utama (Contoh: Pahlawan, Kucing bermain):', // Shortened example
+                contextLocationLabel: 'Lokasi (Contoh: Hutan Amazon, Stasiun luar angkasa):', // Shortened example
+                contextTimeLabel: 'Waktu/Periode (Contoh: Malam hari, Tahun 2077):', // Shortened example
+                contextMoodLabel: 'Suasana/Mood (Contoh: Misterius, Mengharukan):', // Shortened example
+                contextKeyElementsLabel: 'Elemen Kunci/Objek (Contoh: mobil terbang, pohon):', // Shortened example
+                genreLabel: 'Genre Video:',
+                styleLabel: 'Gaya Visual/Mood:',
+                visualElementsLabel: "Elemen Visual Kunci (Contoh: mobil terbang, pohon):", // Shortened example
+                audioElementsLabel: 'Elemen Audio:',
+                cameraMovementsLabel: 'Gerakan Kamera:',
+                lightingLabel: "Pencahayaan:",
+                shootingTechniquesLabel: "Teknik Pengambilan Video:",
+                dialogContentLabel: "Dialog (Opsional):", // New label for dialog
+                outputLangLabel: 'Bahasa Prompt Hasil:',
+                generateBtnText: 'Hasilkan Prompt',
+                loadingText: 'Menghasilkan prompt...',
+                resetButton: 'Reset Form', // New reset button text
+                generatedPromptTitle: 'Prompt yang Dihasilkan',
+                copyBtnText: 'Salin Prompt',
+                saveBtnText: 'Simpan Prompt',
+                savedPromptsTitle: 'Prompt yang Tersimpan',
+                noSavedPromptsText: 'Belum ada prompt yang tersimpan.',
+                copySuccess: 'Prompt berhasil disalin!',
+                copyFail: 'Gagal menyalin prompt.',
+                saveSuccess: 'Prompt berhasil disimpan!',
+                saveFail: 'Gagal menyimpan prompt.',
+                deletePrompt: 'Hapus',
+                deleteConfirm: 'Apakah Anda yakin ingin menghapus prompt ini?',
+                promptRequired: 'Persona, Tugas, dan detail Konteks adalah bidang wajib.'
+            },
+            'en': {
+                darkModeLabel: 'Dark Mode',
+                instructionsTitle: 'Usage Instructions',
+                instructionsPara1: 'This guide helps you create detailed and effective Google Veo video prompts. Follow these steps:',
+                instructionsStep1: '<strong>Choose Persona:</strong> Define the AI\'s role or style.',
+                instructionsStep2: '<strong>Define Task:</strong> Specify what you want the AI to do.',
+                instructionsStep3: '<strong>Provide Context:</strong> Fill each field to describe your video scene in detail:',
+                instructionsStep3_1: '<strong>Main Subject:</strong> The main focus or characters.',
+                instructionsStep3_2: '<strong>Location:</strong> The setting of the scene.',
+                instructionsStep3_3: '<strong>Time of Day/Period:</strong> When the scene takes place.',
+                instructionsStep3_4: '<strong>Mood/Atmosphere:</strong> The emotional tone of the scene.',
+                instructionsStep3_5: '<strong>Key Elements/Objects:</strong> Any other important objects or details.',
+                instructionsStep4: '<strong>Select Video Genre:</strong> Choose the appropriate genre. This will unlock specific options.',
+                instructionsStep5: '<strong>Add Visual & Audio Details (Optional):</strong> Adjust visual style, lighting, camera movements, shooting techniques, and audio elements.',
+                instructionsStep6: '<strong>Select Output Prompt Language:</strong> Determine the language for the generated video prompt.',
+                instructionsStep7: '<strong>Generate Prompt:</strong> Click "Generate Prompt" to see your prompt.',
+                instructionsStep8: '<strong>Save Prompt:</strong> You can save generated prompts for future use.',
+                promptBuilderTitle: 'Build Your Prompt',
+                personaLabel: 'Persona (e.g., Independent film director):',
+                taskLabel: 'Task (e.g., Create a short film scene):',
+                contextSubjectLabel: 'Main Subject (e.g., Superhero, Cat playing):',
+                contextLocationLabel: 'Location (e.g., Amazon rainforest, Space station):',
+                contextTimeLabel: 'Time of Day/Period (e.g., Nighttime, Year 2077):',
+                contextMoodLabel: 'Mood/Atmosphere (e.g., Mysterious, Heartwarming):',
+                contextKeyElementsLabel: 'Key Elements/Objects (e.g., flying cars, tree):',
+                genreLabel: 'Video Genre:',
+                styleLabel: 'Visual Style/Mood:',
+                visualElementsLabel: "Key Visual Elements (e.g., flying cars, tree):",
+                audioElementsLabel: 'Audio Elements:',
+                cameraMovementsLabel: 'Camera Movements:',
+                lightingLabel: 'Lighting:',
+                shootingTechniquesLabel: "Video Shooting Techniques:",
+                dialogContentLabel: "Dialogue (Optional):", // New label for dialog
+                outputLangLabel: 'Output Prompt Language:',
+                generateBtnText: 'Generate Prompt',
+                loadingText: 'Generating prompt...',
+                resetButton: 'Reset Form', // New reset button text
+                generatedPromptTitle: 'Generated Prompt',
+                copyBtnText: 'Copy Prompt',
+                saveBtnText: 'Save Prompt',
+                savedPromptsTitle: 'Saved Prompts',
+                noSavedPromptsText: 'No prompts saved yet.',
+                copySuccess: 'Prompt copied successfully!',
+                copyFail: 'Failed to copy prompt.',
+                saveSuccess: 'Prompt saved successfully!',
+                saveFail: 'Failed to save prompt.',
+                deletePrompt: 'Delete',
+                deleteConfirm: 'Are you sure you want to delete this prompt?',
+                promptRequired: 'Persona, Task, and Context details are required fields.'
+            }
+        };
+
+        const elementsToTranslate = {
+            darkModeLabel: 'darkModeLabel',
+            instructionsTitle: 'instructionsTitle',
+            instructionsPara1: 'instructionsPara1',
+            instructionsStep1: 'instructionsStep1',
+            instructionsStep2: 'instructionsStep2',
+            instructionsStep3: 'instructionsStep3',
+            instructionsStep3_1: 'instructionsStep3_1',
+            instructionsStep3_2: 'instructionsStep3_2',
+            instructionsStep3_3: 'instructionsStep3_3',
+            instructionsStep3_4: 'instructionsStep3_4',
+            instructionsStep3_5: 'instructionsStep3_5',
+            instructionsStep4: 'instructionsStep4',
+            instructionsStep5: 'instructionsStep5',
+            instructionsStep6: 'instructionsStep6',
+            instructionsStep7: 'instructionsStep7',
+            instructionsStep8: 'instructionsStep8',
+            promptBuilderTitle: 'promptBuilderTitle',
+            personaLabel: 'personaLabel',
+            taskLabel: 'taskLabel',
+            contextSubjectLabel: 'contextSubjectLabel',
+            contextLocationLabel: 'contextLocationLabel',
+            contextTimeLabel: 'contextTimeLabel',
+            contextMoodLabel: 'contextMoodLabel',
+            contextKeyElementsLabel: 'contextKeyElementsLabel',
+            genreLabel: 'genreLabel',
+            styleLabel: 'styleLabel',
+            visualElementsLabel: 'visualElementsLabel',
+            audioElementsLabel: 'audioElementsLabel',
+            cameraMovementsLabel: 'cameraMovementsLabel',
+            lightingLabel: 'lightingLabel',
+            shootingTechniquesLabel: 'shootingTechniquesLabel',
+            dialogContentLabel: 'dialogContentLabel', // Add to elements to translate
+            outputLangLabel: 'outputLangLabel',
+            generateBtnText: 'generatePromptBtn',
+            loadingText: 'loadingText',
+            resetButton: 'resetFormBtn', // Add reset button to elements to translate
+            generatedPromptTitle: 'generatedPromptTitle',
+            copyBtnText: 'copyBtnText',
+            saveBtnText: 'saveBtnText',
+            savedPromptsTitle: 'savedPromptsTitle',
+            noSavedPromptsText: 'noSavedPromptsText',
+            helpButton: 'helpButton',
+            logoutButton: 'logoutButton'
+        };
+
+        // Options for dropdowns (kept outside setLanguage for easier management)
+        const dropdownOptions = {
+            videoStyle: {
+                id: {
+                    '': 'Pilih Gaya/Mood',
+                    'cinematic': 'Sinematik',
+                    'cheerful': 'Ceria',
+                    'dramatic': 'Dramatis',
+                    'minimalist': 'Minimalis',
+                    'realistic': 'Realistis',
+                    'abstract': 'Abstrak',
+                    'vintage': 'Vintaj/Retro',
+                    'futuristic': 'Futuristik',
+                    'documentary': 'Dokumenter',
+                    'fantasy': 'Fantasi',
+                    'horror': 'Horor',
+                },
+                en: {
+                    '': 'Select Style/Mood',
+                    'cinematic': 'Cinematic',
+                    'cheerful': 'Cheerful',
+                    'dramatic': 'Dramatic',
+                    'minimalist': 'Minimalist',
+                    'realistic': 'Realistic',
+                    'abstract': 'Abstract',
+                    'vintage': 'Vintage/Retro',
+                    'futuristic': 'Futuristic',
+                    'documentary': 'Documentary',
+                    'fantasy': 'Fantasy',
+                    'horror': 'Horror',
+                }
+            },
+            audioElements: {
+                id: {
+                    '': 'Pilih Elemen Audio',
+                    'cheerful_music': 'Musik Latar Ceria',
+                    'dramatic_music': 'Musik Latar Dramatis',
+                    'mysterious_music': 'Musik Latar Misterius',
+                    'explosion_sfx': 'Efek Suara Ledakan',
+                    'nature_sfx': 'Efek Suara Alam',
+                    'city_sfx': 'Efek Suara Kota',
+                    'male_narration': 'Narasi Pria',
+                    'female_narration': 'Narasi Wanita',
+                    'child_narration': 'Narasi Anak-anak',
+                    'clear_dialogue': 'Dialog Jernih',
+                    'ambient_rain': 'Ambient Hujan',
+                    'ambient_wind': 'Ambient Angin',
+                    'ambient_crowd': 'Ambient Keramaian',
+                    'no_audio': 'Tidak Ada Audio',
+                },
+                en: {
+                    '': 'Select Audio Element',
+                    'cheerful_music': 'Cheerful Background Music',
+                    'dramatic_music': 'Dramatic Background Music',
+                    'mysterious_music': 'Mysterious Background Music',
+                    'explosion_sfx': 'Explosion Sound Effect',
+                    'nature_sfx': 'Nature Sound Effect',
+                    'city_sfx': 'City Sound Effect',
+                    'male_narration': 'Male Narration',
+                    'female_narration': 'Female Narration',
+                    'child_narration': 'Child Narration',
+                    'clear_dialogue': 'Clear Dialogue',
+                    'ambient_rain': 'Ambient Rain',
+                    'ambient_wind': 'Ambient Wind',
+                    'ambient_crowd': 'Ambient Crowd',
+                    'no_audio': 'No Audio',
+                }
+            },
+            cameraMovements: {
+                id: {
+                    '': 'Pilih Gerakan Kamera',
+                    'pan_left': 'Panoramik Kiri',
+                    'pan_right': 'Panoramik Kanan',
+                    'tilt_up': 'Tilt Atas',
+                    'tilt_down': 'Tilt Bawah',
+                    'zoom_in': 'Zoom In',
+                    'zoom_out': 'Zoom Out',
+                    'dolly_in': 'Dolly Maju',
+                    'dolly_out': 'Dolly Mundur',
+                    'orbital': 'Orbital',
+                    'handheld': 'Handheld/Genggam',
+                    'drone_shot': 'Drone Shot',
+                    'static': 'Statik/Diam',
+                    'pov': 'Point of View (POV)',
+                },
+                en: {
+                    '': 'Select Camera Movement',
+                    'pan_left': 'Pan Left',
+                    'pan_right': 'Pan Right',
+                    'tilt_up': 'Tilt Up',
+                    'tilt_down': 'Tilt Down',
+                    'zoom_in': 'Zoom In',
+                    'zoom_out': 'Zoom Out',
+                    'dolly_in': 'Dolly In',
+                    'dolly_out': 'Dolly Out',
+                    'orbital': 'Orbital',
+                    'handheld': 'Handheld',
+                    'drone_shot': 'Drone Shot',
+                    'static': 'Static',
+                    'pov': 'Point of View (POV)',
+                }
+            },
+            lighting: {
+                id: {
+                    '': 'Pilih Pencahayaan',
+                    'natural_day': 'Alami (Siang)',
+                    'natural_dusk': 'Alami (Senja)',
+                    'natural_night': 'Alami (Malam)',
+                    'dramatis_shadows': 'Dramatis (Bayangan Kuat)',
+                    'silhouette': 'Siluet',
+                    'neon': 'Neon',
+                    'soft_even': 'Lembut dan Merata',
+                    'high_contrast': 'Kontras Tinggi',
+                    'low_light': 'Remang-remang',
+                    'studio_light': 'Cahaya Studio',
+                },
+                en: {
+                    '': 'Select Lighting',
+                    'natural_day': 'Natural (Day)',
+                    'natural_dusk': 'Natural (Dusk)',
+                    'natural_night': 'Natural (Night)',
+                    'dramatis_shadows': 'Dramatic Shadows',
+                    'silhouette': 'Silhouette',
+                    'neon': 'Neon',
+                    'soft_even': 'Soft and Even',
+                    'high_contrast': 'High Contrast',
+                    'low_light': 'Low Light',
+                    'studio_light': 'Studio Light',
+                }
+            },
+            shootingTechniques: {
+                id: {
+                    '': 'Pilih Teknik',
+                    'wide_shot': 'Wide Shot',
+                    'medium_shot': 'Medium Shot',
+                    'close_up': 'Close-up',
+                    'extreme_close_up': 'Extreme Close-up',
+                    'low_angle': 'Sudut Rendah (Low Angle)',
+                    'high_angle': 'Sudut Tinggi (High Angle)',
+                    'dutch_angle': 'Dutch Angle (Miring)',
+                    'slow_motion': 'Slow Motion',
+                    'fast_motion': 'Fast Motion',
+                    'time_lapse': 'Time-lapse',
+                    'hyperlapse': 'Hyperlapse',
+                },
+                en: {
+                    '': 'Select Technique',
+                    'wide_shot': 'Wide Shot',
+                    'medium_shot': 'Medium Shot',
+                    'close_up': 'Close-up',
+                    'extreme_close_up': 'Extreme Close-up',
+                    'low_angle': 'Low Angle',
+                    'high_angle': 'High Angle',
+                    'dutch_angle': 'Dutch Angle',
+                    'slow_motion': 'Slow Motion',
+                    'fast_motion': 'Fast Motion',
+                    'time_lapse': 'Time-lapse',
+                    'hyperlapse': 'Hyperlapse',
+                }
+            }
+        };
+
+
+        function setLanguage(lang) {
+            Object.keys(elementsToTranslate).forEach(key => {
+                const element = document.getElementById(elementsToTranslate[key]);
+                if (element) {
+                    if (key.startsWith('instructionsStep') && !key.startsWith('instructionsStep3_')) {
+                        element.innerHTML = translations[lang][key];
+                    } else if (key.startsWith('instructionsStep3_')) {
+                        element.innerHTML = translations[lang][key];
+                    } else if (key === 'generateBtnText' || key === 'copyBtnText' || key === 'saveBtnText' || key === 'resetButton') { // Exclude logout button
+                        element.textContent = translations[lang][key];
+                    } else if (key === 'darkModeLabel' || key === 'helpButton' || key === 'logoutButton') {
+                        // Special handling for these elements: dark mode label is removed, help button and logout button use icons directly
+                        if (key === 'darkModeLabel') {
+                            element.textContent = ''; // Clear text for dark mode label
+                        }
+                        // For helpButton and logoutButton, their content is already set as icons in HTML.
+                        // No text update needed here.
+                    }
+                    else {
+                        element.textContent = translations[lang][key];
+                    }
+                }
+            });
+
+            // Update placeholders manually
+            document.getElementById('persona').placeholder = lang === 'id' ? 'Saya adalah seorang jurnalis investigatif...' : 'I am an investigative journalist...';
+            document.getElementById('task').placeholder = lang === 'id' ? 'Hasilkan cuplikan video... (gunakan kata kerja)' : 'Generate a video clip... (use a verb)';
+            document.getElementById('contextSubject').placeholder = lang === 'id' ? 'Pahlawan, Kucing bermain...' : 'Superhero, Cat playing...';
+            document.getElementById('contextLocation').placeholder = lang === 'id' ? 'Hutan Amazon, Stasiun luar angkasa...' : 'Amazon rainforest, Space station...';
+            document.getElementById('contextTime').placeholder = lang === 'id' ? 'Malam hari, Tahun 2077...' : 'Nighttime, Year 2077...';
+            document.getElementById('contextMood').placeholder = lang === 'id' ? 'Misterius, Mengharukan...' : 'Mysterious, Heartwarming...';
+            document.getElementById('contextKeyElements').placeholder = lang === 'id' ? 'Mobil terbang, pohon...' : 'Flying cars, tree...';
+            document.getElementById('visualElements').placeholder = lang === 'id' ? 'Robot, naga, gunung salju...' : 'Robots, dragons, snowy mountains...';
+            document.getElementById('dialogContent').placeholder = lang === 'id' ? "Aktor 1: 'Halo, apa kabar?' Aktor 2: 'Baik, terima kasih!'" : "Actor 1: 'Hello, how are you?' Actor 2: 'Fine, thank you!'";
+            document.getElementById('generatedPromptOutput').placeholder = lang === 'id' ? 'Prompt Anda akan muncul di sini.' : 'Your prompt will appear here.';
+
+            // Update genre select options
+            const genreSelect = document.getElementById('videoGenre');
+            Array.from(genreSelect.options).forEach(option => {
+                if (option.value === "") option.textContent = lang === 'id' ? 'Pilih Genre' : 'Select Genre';
+                if (option.value === "action") option.textContent = lang === 'id' ? 'Aksi' : 'Action';
+                if (option.value === "documentary") option.textContent = lang === 'id' ? 'Dokumenter' : 'Documentary';
+                if (option.value === "comedy") option.textContent = lang === 'id' ? 'Komedi' : 'Comedy';
+                if (option.value === "tutorial") option.textContent = lang === 'id' ? 'Tutorial' : 'Tutorial';
+                if (option.value === "sci-fi") option.textContent = lang === 'id' ? 'Fiksi Ilmiah' : 'Sci-Fi';
+                if (option.value === "fantasy") option.textContent = lang === 'id' ? 'Fantasi' : 'Fantasy';
+                if (option.value === "horror") option.textContent = lang === 'id' ? 'Horor' : 'Horror';
+                if (option.value === "animation") option.textContent = lang === 'id' ? 'Animasi' : 'Animation';
+                if (option.value === "music-video") option.textContent = lang === 'id' ? 'Video Musik' : 'Music Video';
+                if (option.value === "commercial") option.textContent = lang === 'id' ? 'Iklan' : 'Commercial';
+                if (option.value === "vlog") option.textContent = lang === 'id' ? 'Vlog' : 'Vlog';
+                if (option.value === "explainer") option.textContent = lang === 'id' ? 'Video Penjelasan' : 'Explainer Video';
+                if (option.value === "news") option.textContent = lang === 'id' ? 'Berita' : 'News';
+                if (option.value === "podcast") option.textContent = lang === 'id' ? 'Podcast' : 'Podcast';
+            });
+
+            // Update new dropdowns
+            for (const key of Object.keys(dropdownOptions)) {
+                const selectElement = document.getElementById(key);
+                if (selectElement) {
+                    const currentSelectedValue = selectElement.value; // Store current value
+                    selectElement.innerHTML = ''; // Clear existing options
+                    for (const [val, text] of Object.entries(dropdownOptions[key][lang])) {
+                        const option = document.createElement('option');
+                        option.value = val;
+                        option.textContent = text;
+                        selectElement.appendChild(option);
+                    }
+                    selectElement.value = currentSelectedValue; // Restore selected value
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginPage = document.getElementById('loginPage');
+            const mainAppPage = document.getElementById('mainAppPage');
+            const body = document.body; // Reference to the body element
+
+            const loginForm = document.getElementById('loginForm');
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const errorMessage = document.getElementById('errorMessage');
+
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const uiLanguageSelect = document.getElementById('uiLanguageSelect');
+            const genreSelect = document.getElementById('videoGenre');
+            const genreSpecificFields = document.getElementById('genreSpecificFields'); 
+            const generatePromptBtn = document.getElementById('generatePromptBtn');
+            const generatedPromptOutput = document.getElementById('generatedPromptOutput');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const copyPromptBtn = document.getElementById('copyPromptBtn');
+            const savePromptBtn = document.getElementById('savePromptBtn');
+            const savedPromptsList = document.getElementById('savedPromptsList');
+            const messageBox = document.getElementById('messageBox');
+            const helpButton = document.getElementById('helpButton');
+            const helpModal = document.getElementById('helpModal');
+            const closeModalButton = helpModal.querySelector('.close-button');
+            const logoutButton = document.getElementById('logoutButton'); 
+            const resetButton = document.getElementById('resetFormBtn'); // Get reset button
+
+            // Function to show login page
+            function showLoginPage() {
+                loginPage.classList.remove('hidden');
+                loginPage.classList.add('is-active'); // Add active class for styling
+                mainAppPage.classList.add('hidden');
+                mainAppPage.classList.remove('is-active'); // Remove active class from main app
+                // Ensure body's min-height is still 100vh for centering the login form
+                body.style.minHeight = '100vh';
+                usernameInput.value = ''; // Clear username field
+                passwordInput.value = ''; // Clear password field
+                errorMessage.classList.add('hidden'); // Hide error message
+            }
+
+            // Function to show main app page
+            function showMainAppPage() {
+                loginPage.classList.add('hidden');
+                loginPage.classList.remove('is-active'); // Remove active class from login
+                mainAppPage.classList.remove('hidden');
+                mainAppPage.classList.add('is-active'); // Add active class for styling
+                // Allow body to grow with content, remove fixed min-height for main app
+                body.style.minHeight = 'auto'; 
+            }
+
+            // Initial page load check
+            if (sessionStorage.getItem('isLoggedIn') === 'true') {
+                showMainAppPage();
+            } else {
+                showLoginPage();
+            }
+
+            // Apply dark mode if previously set
+            if (localStorage.getItem('darkMode') === 'enabled' || (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.body.classList.add('dark');
+                darkModeToggle.checked = true; // Ensure toggle is checked if dark mode is active
+            } else {
+                document.body.classList.remove('dark');
+                darkModeToggle.checked = false;
+            }
+
+            // Initialize UI language from localStorage
+            const savedLang = localStorage.getItem('uiLanguage') || 'id';
+            uiLanguageSelect.value = savedLang;
+            setLanguage(savedLang); // Call setLanguage once on load to populate dropdowns
+
+            // Dark mode toggle event listener
+            darkModeToggle.addEventListener('change', () => {
+                if (darkModeToggle.checked) {
+                    document.body.classList.add('dark'); // Apply to body
+                    localStorage.setItem('darkMode', 'enabled');
+                } else {
+                    document.body.classList.remove('dark'); // Remove from body
+                    localStorage.setItem('darkMode', 'disabled');
+                }
+            });
+
+            // UI Language select event listener
+            uiLanguageSelect.addEventListener('change', (event) => {
+                const selectedLang = event.target.value;
+                localStorage.setItem('uiLanguage', selectedLang);
+                setLanguage(selectedLang);
+            });
+
+            // Login functionality
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                const username = usernameInput.value;
+                const password = passwordInput.value;
+
+                const correctUsername = 'arifwibowoblitar';
+                const correctPassword = '085645839871';
+
+                if (username === correctUsername && password === correctPassword) {
+                    sessionStorage.setItem('isLoggedIn', 'true');
+                    showMainAppPage();
+                } else {
+                    errorMessage.textContent = 'Username atau password salah.';
+                    errorMessage.classList.remove('hidden');
+                }
+            });
+
+            // Logout functionality
+            logoutButton.addEventListener('click', () => {
+                sessionStorage.removeItem('isLoggedIn');
+                showLoginPage();
+            });
+
+            // Reset Form functionality
+            resetButton.addEventListener('click', () => {
+                // Reset text inputs and textareas
+                document.getElementById('persona').value = '';
+                document.getElementById('task').value = '';
+                document.getElementById('contextSubject').value = '';
+                document.getElementById('contextLocation').value = '';
+                document.getElementById('contextTime').value = '';
+                document.getElementById('contextMood').value = '';
+                document.getElementById('contextKeyElements').value = '';
+                document.getElementById('visualElements').value = '';
+                document.getElementById('dialogContent').value = ''; // Clear dialog content
+                document.getElementById('generatedPromptOutput').value = ''; // Clear generated prompt
+
+                // Reset dropdowns to their first option (empty value)
+                document.getElementById('videoGenre').value = '';
+                document.getElementById('videoStyle').value = '';
+                document.getElementById('audioElements').value = '';
+                document.getElementById('cameraMovements').value = '';
+                document.getElementById('lighting').value = '';
+                document.getElementById('shootingTechniques').value = '';
+                document.getElementById('outputPromptLanguage').value = 'id'; // Default to Indonesian
+                
+                showMessage('Formulir telah direset.', 'info');
+            });
+
+
+            // Display message box
+            function showMessage(text, type = 'info') {
+                messageBox.textContent = text;
+                messageBox.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700', 'bg-blue-100', 'text-blue-700');
+                if (type === 'success') {
+                    messageBox.classList.add('bg-green-100', 'text-green-700');
+                } else if (type === 'error') {
+                    messageBox.classList.add('bg-red-100', 'text-red-700');
+                } else {
+                    messageBox.classList.add('bg-blue-100', 'text-blue-700');
+                }
+                setTimeout(() => {
+                    messageBox.classList.add('hidden');
+                }, 3000);
+            }
+
+            // Generate prompt function
+            generatePromptBtn.addEventListener('click', async () => {
+                const persona = document.getElementById('persona').value.trim();
+                const task = document.getElementById('task').value.trim();
+                const contextSubject = document.getElementById('contextSubject').value.trim();
+                const contextLocation = document.getElementById('contextLocation').value.trim();
+                const contextTime = document.getElementById('contextTime').value.trim();
+                const contextMood = document.getElementById('contextMood').value.trim();
+                const contextKeyElements = document.getElementById('contextKeyElements').value.trim();
+                const dialogContent = document.getElementById('dialogContent').value.trim(); // Get dialog content
+
+                const videoGenre = document.getElementById('videoGenre').value;
+                const videoStyle = document.getElementById('videoStyle').value;
+                const visualElements = document.getElementById('visualElements').value.trim();
+                const audioElements = document.getElementById('audioElements').value;
+                const cameraMovements = document.getElementById('cameraMovements').value;
+                const lighting = document.getElementById('lighting').value;
+                const shootingTechniques = document.getElementById('shootingTechniques').value;
+                const outputPromptLanguage = document.getElementById('outputPromptLanguage').value;
+
+                if (!persona || !task || !contextSubject || !contextLocation || !contextTime || !contextMood) {
+                    showMessage(translations[uiLanguageSelect.value]['promptRequired'], 'error');
+                    return;
+                }
+
+                loadingIndicator.classList.remove('hidden');
+                generatedPromptOutput.value = '';
+
+                let promptParts = [];
+                promptParts.push(`As an expert in video content creation for Google Veo, ${persona}.`);
+                promptParts.push(`${task}.`);
+
+                let contextDetails = [];
+                if (contextSubject) contextDetails.push(`Subject: ${contextSubject}`);
+                if (contextLocation) contextDetails.push(`Location: ${contextLocation}`);
+                if (contextTime) contextDetails.push(`Time/Period: ${contextTime}`);
+                if (contextMood) contextDetails.push(`Mood/Atmosphere: ${contextMood}`);
+                if (contextKeyElements) contextDetails.push(`Key elements: ${contextKeyElements}`);
+                
+                if (contextDetails.length > 0) {
+                    promptParts.push(`The video should depict: ${contextDetails.join(', ')}.`);
+                }
+
+                let genreAndVisualDetails = [];
+                if (videoGenre) genreAndVisualDetails.push(`Genre: ${videoGenre}.`);
+                if (videoStyle) genreAndVisualDetails.push(`Visual style/mood: ${dropdownOptions.videoStyle[uiLanguageSelect.value][videoStyle]}.`);
+                if (visualElements) genreAndVisualDetails.push(`Key visual elements: ${visualElements}.`);
+                if (audioElements) genreAndVisualDetails.push(`Audio elements: ${dropdownOptions.audioElements[uiLanguageSelect.value][audioElements]}.`);
+                if (cameraMovements) genreAndVisualDetails.push(`Camera movements: ${dropdownOptions.cameraMovements[uiLanguageSelect.value][cameraMovements]}.`);
+                if (lighting) genreAndVisualDetails.push(`Lighting: ${dropdownOptions.lighting[uiLanguageSelect.value][lighting]}.`);
+                if (shootingTechniques) genreAndVisualDetails.push(`Shooting techniques: ${dropdownOptions.shootingTechniques[uiLanguageSelect.value][shootingTechniques]}.`);
+                if (dialogContent) genreAndVisualDetails.push(`Dialogue: "${dialogContent}".`); // Add dialog content
+
+                if (genreAndVisualDetails.length > 0) {
+                    promptParts.push(genreAndVisualDetails.join(' '));
+                }
+
+                promptParts.push(`Generate the prompt in ${outputPromptLanguage} language.`);
+                promptParts.push(`Make sure the prompt is highly effective and efficient for Google Veo's AI, covering all necessary details for video generation.`);
+
+                const finalPrompt = promptParts.join(' ');
+
+                try {
+                    let chatHistory = [];
+                    chatHistory.push({ role: "user", parts: [{ text: finalPrompt }] });
+                    const payload = { contents: chatHistory };
+                    const apiKey = "";
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        generatedPromptOutput.value = text;
+                    } else {
+                        generatedPromptOutput.value = 'Failed to generate prompt. Please try again.';
+                    }
+                } catch (error) {
+                    console.error('Error generating prompt:', error);
+                    generatedPromptOutput.value = 'An error occurred while generating the prompt. Please check your network connection and try again.';
+                } finally {
+                    loadingIndicator.classList.add('hidden');
+                }
+            });
+
+            // Copy prompt to clipboard
+            copyPromptBtn.addEventListener('click', () => {
+                generatedPromptOutput.select();
+                generatedPromptOutput.setSelectionRange(0, 99999);
+                try {
+                    document.execCommand('copy');
+                    showMessage(translations[uiLanguageSelect.value]['copySuccess'], 'success');
+                } catch (err) {
+                    console.error('Failed to copy text: ', err);
+                    showMessage(translations[uiLanguageSelect.value]['copyFail'], 'error');
+                }
+            });
+
+            // Save prompt to localStorage
+            savePromptBtn.addEventListener('click', () => {
+                const promptText = generatedPromptOutput.value.trim();
+                if (promptText) {
+                    let savedPrompts = JSON.parse(localStorage.getItem('veoPrompts') || '[]');
+                    const newPrompt = {
+                        id: Date.now(),
+                        text: promptText,
+                        timestamp: new Date().toLocaleString()
+                    };
+                    savedPrompts.push(newPrompt);
+                    localStorage.setItem('veoPrompts', JSON.stringify(savedPrompts));
+                    loadSavedPrompts();
+                    showMessage(translations[uiLanguageSelect.value]['saveSuccess'], 'success');
+                } else {
+                    showMessage(translations[uiLanguageSelect.value]['saveFail'] + ' (Prompt is empty)', 'error');
+                }
+            });
+
+            // Load and display saved prompts
+            function loadSavedPrompts() {
+                const savedPrompts = JSON.parse(localStorage.getItem('veoPrompts') || '[]');
+                savedPromptsList.innerHTML = '';
+
+                if (savedPrompts.length === 0) {
+                    savedPromptsList.innerHTML = `<p class="text-gray-500 dark:text-gray-400" id="noSavedPromptsText">${translations[uiLanguageSelect.value]['noSavedPromptsText']}</p>`;
+                    return;
+                }
+
+                savedPrompts.forEach(prompt => {
+                    const promptItem = document.createElement('div');
+                    promptItem.id = `prompt-${prompt.id}`;
+                    promptItem.classList.add('saved-prompt-item', 'p-4', 'border', 'border-gray-200', 'rounded-md', 'mb-2', 'relative', 'dark:bg-gray-700', 'dark:border-gray-600');
+                    promptItem.innerHTML = `
+                        <p class="text-gray-800 dark:text-gray-200 text-sm whitespace-pre-wrap">${prompt.text}</p>
+                        <p class="text-gray-500 dark:text-gray-400 text-xs mt-2">Disimpan pada: ${prompt.timestamp}</p>
+                        <button class="delete-prompt-btn absolute top-2 right-2 text-red-500 hover:text-red-700 focus:outline-none" data-id="${prompt.id}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm6 3a1 1 0 100 2h-2a1 1 0 100-2h2z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    `;
+                    savedPromptsList.appendChild(promptItem);
+                });
+
+                document.querySelectorAll('.delete-prompt-btn').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const idToDelete = parseInt(event.currentTarget.dataset.id);
+                        if (confirm(translations[uiLanguageSelect.value]['deleteConfirm'])) {
+                            let currentPrompts = JSON.parse(localStorage.getItem('veoPrompts') || '[]');
+                            currentPrompts = currentPrompts.filter(p => p.id !== idToDelete);
+                            localStorage.setItem('veoPrompts', JSON.stringify(currentPrompts));
+                            loadSavedPrompts();
+                        }
+                    });
+                });
+            }
+
+            loadSavedPrompts();
+
+            helpButton.addEventListener('click', () => {
+                helpModal.style.display = 'flex';
+            });
+
+            closeModalButton.addEventListener('click', () => {
+                helpModal.style.display = 'none';
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target === helpModal) {
+                    helpModal.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
