@@ -205,11 +205,10 @@
                     </button>
                 </div>
             </div>
-            <!-- Text "By Arif Wibowo Blitar" is now part of the marquee below -->
-            <div class="marquee-container text-sm font-normal w-full">
+            <div class="marquee-container text-sm font-normal">
                 <marquee behavior="scroll" direction="left" scrollamount="5">
                     <div class="contact-info inline-flex items-center">
-                        <span class="font-semibold text-base">By Arif Wibowo Blitar &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        <span class="font-semibold text-gray-700 dark:text-gray-200 text-base">By Arif Wibowo Blitar &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
                         <a href="https://instagram.com/arifwibowoblitar" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i> arifwibowoblitar</a>
                         <a href="https://wa.me/6285645839871" target="_blank" aria-label="Whatsapp"><i class="fab fa-whatsapp"></i> 085645839871</a>
                         <a href="https://facebook.com/arifwibowoblitar" target="_blank" aria-label="Facebook"><i class="fab fa-facebook"></i> arifwibowoblitar</a>
@@ -316,7 +315,7 @@
                     </div>
                     <!-- Key Visual Elements (remains text input as it's too varied for dropdown) -->
                     <div>
-                        <label for="visualElements" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" id="visualElementsLabel">Elemen Visual Kunci (Contoh: gaya rambut, pakaian):</label>
+                        <label for="visualElements" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" id="visualElementsLabel">Elemen Visual Kunci (Contoh: gaya rambut, pakaian, tubuh):</label>
                         <input type="text" id="visualElements" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300" placeholder="Robot, naga, gunung salju...">
                     </div>
                     <!-- Audio Elements Dropdown -->
@@ -714,7 +713,7 @@
                     '': 'Pilih Gaya/Mood',
                     'cinematic': 'Sinematik',
                     'cheerful': 'Ceria',
-                    'dramatis': 'Dramatis',
+                    'dramatic': 'Dramatis',
                     'minimalist': 'Minimalis',
                     'realistic': 'Realistis',
                     'abstract': 'Abstrak',
@@ -878,15 +877,11 @@
                         element.innerHTML = translations[lang][key];
                     } else if (key.startsWith('instructionsStep3_')) {
                         element.innerHTML = translations[lang][key];
-                    } else if (key === 'generateBtnText' || key === 'copyBtnText' || key === 'saveBtnText' || key === 'resetButton') { // Exclude logout button
+                    } else if (key === 'generateBtnText' || key === 'copyBtnText' || key === 'saveBtnText' || key === 'resetButton') {
                         element.textContent = translations[lang][key];
                     } else if (key === 'darkModeLabel' || key === 'helpButton' || key === 'logoutButton') {
-                        // Special handling for these elements: dark mode label is cleared, help button and logout button use icons directly
-                        if (key === 'darkModeLabel') {
-                            element.textContent = ''; // Clear text for dark mode label
-                        }
-                        // For helpButton and logoutButton, their content is already set as icons in HTML.
-                        // No text update needed here.
+                        // These elements are handled via their HTML content directly or are purely visual (label for toggle).
+                        // No text update here.
                     }
                     else {
                         element.textContent = translations[lang][key];
@@ -902,7 +897,7 @@
             document.getElementById('contextTime').placeholder = lang === 'id' ? 'Malam hari, Tahun 2077...' : 'Nighttime, Year 2077...';
             document.getElementById('contextMood').placeholder = lang === 'id' ? 'Misterius, Mengharukan...' : 'Mysterious, Heartwarming...';
             document.getElementById('contextKeyElements').placeholder = lang === 'id' ? 'Mobil terbang, pohon...' : 'Flying cars, tree...';
-            document.getElementById('visualElements').placeholder = lang === 'id' ? 'Gaya rambut, pakaian, tubuh...' : 'Hair style, clothing, body type...'; // Updated placeholder
+            document.getElementById('visualElements').placeholder = lang === 'id' ? 'Gaya rambut, pakaian, tubuh...' : 'Hair style, clothing, body type...';
             document.getElementById('dialogContent').placeholder = lang === 'id' ? "Aktor 1: 'Halo, apa kabar?' Aktor 2: 'Baik, terima kasih!'" : "Actor 1: 'Hello, how are you?' Actor 2: 'Fine, thank you!'";
             document.getElementById('generatedPromptOutput').placeholder = lang === 'id' ? 'Prompt Anda akan muncul di sini.' : 'Your prompt will appear here.';
 
@@ -1175,6 +1170,14 @@
                         body: JSON.stringify(payload)
                     });
 
+                    // Check if the response is OK (status 2xx)
+                    if (!response.ok) {
+                        const errorResponseText = await response.text();
+                        console.error('API Error Response:', errorResponseText);
+                        generatedPromptOutput.value = `Gagal menghasilkan prompt. Status: ${response.status}. Pesan: ${errorResponseText || 'Respons tidak valid.'}`;
+                        return;
+                    }
+
                     const result = await response.json();
 
                     if (result.candidates && result.candidates.length > 0 &&
@@ -1183,11 +1186,12 @@
                         const text = result.candidates[0].content.parts[0].text;
                         generatedPromptOutput.value = text;
                     } else {
-                        generatedPromptOutput.value = 'Failed to generate prompt. Please try again.';
+                        generatedPromptOutput.value = 'Gagal menghasilkan prompt. Struktur respons API tidak terduga atau konten kosong.';
+                        console.error('API response was not as expected:', result);
                     }
                 } catch (error) {
                     console.error('Error generating prompt:', error);
-                    generatedPromptOutput.value = 'An error occurred while generating the prompt. Please check your network connection and try again.';
+                    generatedPromptOutput.value = `Terjadi kesalahan saat menghasilkan prompt: ${error.message}. Mohon periksa koneksi internet atau coba lagi.`;
                 } finally {
                     loadingIndicator.classList.add('hidden');
                 }
